@@ -110,7 +110,7 @@ export function HeroInput({
           <span className="accent-word">before writing code.</span>
         </h1>
         <p className="hero-subtitle">
-          Live market, competitor, customer, risk, and 90-day roadmap validation.
+          Live market, competitor, customer, risk, and 90-day roadmap validation (~60s deep research run).
         </p>
       </div>
 

@@ -98,7 +98,7 @@ export async function tinySearch(
         "X-API-Key": apiKey,
         Accept: "application/json",
       },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) {
@@ -138,7 +138,7 @@ async function jinaFetchSingle(url: string): Promise<FetchedPage | null> {
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
       headers: { Accept: "text/plain" },
-      signal: AbortSignal.timeout(9000),
+      signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return null;
     const text = (await res.text()).slice(0, 3500);
@@ -179,7 +179,7 @@ export async function tinyFetch(
           urls: cleanUrls,
           format: "markdown",
         }),
-        signal: AbortSignal.timeout(16000),
+        signal: AbortSignal.timeout(9000),
       });
 
       if (res.ok) {
@@ -248,7 +248,7 @@ export async function tinyAgentWithFallback(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ url, goal }),
-      signal: AbortSignal.timeout(22000),
+      signal: AbortSignal.timeout(12000),
     });
 
     if (res.status === 402 || res.status === 403 || res.status === 429) {

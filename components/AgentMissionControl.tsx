@@ -81,7 +81,26 @@ export function AgentMissionControl({
   const completedCount = ORDERED_AGENTS.filter(
     (id) => nodes[id].status === "done" || nodes[id].status === "fallback"
   ).length;
-  const progressPct = Math.round((completedCount / 6) * 100);
+
+  // Expected live run target: ~68 seconds for deep multi-agent web retrieval
+  const estSecondsRemaining = Math.max(
+    3,
+    Math.round(68 - elapsedMs / 1000)
+  );
+  const timeProgressPct = Math.min(94, Math.round((elapsedMs / 68000) * 100));
+  const discreteProgressPct = Math.round((completedCount / 6) * 100);
+  const progressPct = isRunning
+    ? Math.max(discreteProgressPct, timeProgressPct)
+    : 100;
+
+  const stageLabel =
+    completedCount === 0
+      ? "Stage 1/3 · Framing & Search Queries"
+      : completedCount < 5
+        ? "Stage 2/3 · 4 Parallel Web Research Agents"
+        : completedCount === 5
+          ? "Stage 3/3 · 90-Day MVP & GTM Roadmap"
+          : "Complete · All 6 Agents Done";
 
   const formattedTime = `${String(Math.floor(elapsedMs / 60000)).padStart(2, "0")}:${(
     (elapsedMs % 60000) /
@@ -105,7 +124,7 @@ export function AgentMissionControl({
                 {isRunning
                   ? isPaused
                     ? "PAUSED"
-                    : "LIVE"
+                    : "LIVE RESEARCH"
                   : "DONE"}
               </span>
             </div>
@@ -130,16 +149,32 @@ export function AgentMissionControl({
                 type="button"
                 className="nav-btn nav-btn-primary"
                 onClick={onSkipToReport}
+                title="Early sections ready to read"
               >
-                <span>View Report →</span>
+                <span>View Live Report →</span>
               </button>
             )}
           </div>
         </div>
 
         <div className="orch-progress-meta">
-          <span>{completedCount}/6 agents</span>
-          <span className="mono">{formattedTime}</span>
+          <span>{stageLabel}</span>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            {isRunning && (
+              <span
+                className="tag-pill mono"
+                style={{
+                  background: "var(--orange-50)",
+                  color: "var(--orange-700)",
+                  border: "1px solid var(--orange-200)",
+                  fontSize: "0.72rem",
+                }}
+              >
+                ~{estSecondsRemaining}s remaining
+              </span>
+            )}
+            <span className="mono">{formattedTime}</span>
+          </div>
         </div>
         <div className="orch-track">
           <div className="orch-fill" style={{ width: `${progressPct}%` }} />

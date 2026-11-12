@@ -1,10 +1,8 @@
 import { z } from "zod";
 
 const GEMINI_MODELS = [
-  "gemini-3.5-flash",
   "gemini-3.5-flash-lite",
-  "gemini-3.1-flash-lite",
-  "gemini-3.8-flash",
+  "gemini-3.5-flash",
 ];
 const GROQ_MODELS = [
   "openai/gpt-oss-120b",
@@ -88,7 +86,7 @@ async function callGemini(
         "x-goog-api-key": apiKey,
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(35000),
+      signal: AbortSignal.timeout(14000),
     });
 
     if (!res.ok) {
@@ -170,7 +168,7 @@ async function postGroqCompletion(
         { role: "user", content: userPrompt },
       ],
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(18000),
   });
 
   if (!res.ok) {
