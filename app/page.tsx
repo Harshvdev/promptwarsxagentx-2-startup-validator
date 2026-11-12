@@ -1,69 +1,527 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
+import {
+  AgentMissionControl,
+  type AgentNodeState,
+} from "@/components/AgentMissionControl";
+import { CopilotDrawer } from "@/components/CopilotDrawer";
+import { HeroInput } from "@/components/HeroInput";
+import { HistoryDrawer } from "@/components/HistoryDrawer";
+import { Navbar } from "@/components/Navbar";
+import {
+  ReportWorkspace,
+  type PartialReportData,
+} from "@/components/ReportWorkspace";
+import type {
+  AgentNodeId,
+  AgentSSEEvent,
+  AnalysisInput,
+  CompetitorOutput,
+  CustomerOutput,
+  FramerOutput,
+  MarketOutput,
+  PlannerOutput,
+  StartupReport,
+  UsageQuotaInfo,
+  ValidatorOutput,
+} from "@/lib/types";
+
+const STORAGE_KEY = "sparkproof_reports_v1";
+const THEME_KEY = "sparkproof_theme_v1";
+
+type ViewMode = "hero" | "validating" | "report";
+
+function createInitialNodes(): Record<AgentNodeId, AgentNodeState> {
+  return {
+    framer: {
+      id: "framer",
+      label: "Idea Framer",
+      role: "Stage 1",
+      status: "pending",
+      message: "Waiting...",
+      queries: [],
+      sources: [],
+    },
+    market: {
+      id: "market",
+      label: "Market Analyst",
+      role: "Stage 2",
+      status: "pending",
+      message: "Queued",
+      queries: [],
+      sources: [],
+    },
+    competitors: {
+      id: "competitors",
+      label: "Competitor Intel",
+      role: "Stage 2",
+      status: "pending",
+      message: "Queued",
+      queries: [],
+      sources: [],
+    },
+    customers: {
+      id: "customers",
+      label: "Customer Profiler",
+      role: "Stage 2",
+      status: "pending",
+      message: "Queued",
+      queries: [],
+      sources: [],
+    },
+    validator: {
+      id: "validator",
+      label: "Devil's Advocate",
+      role: "Stage 2",
+      status: "pending",
+      message: "Queued",
+      queries: [],
+      sources: [],
+    },
+    planner: {
+      id: "planner",
+      label: "Execution Planner",
+      role: "Stage 3",
+      status: "pending",
+      message: "Queued",
+      queries: [],
+      sources: [],
+    },
+  };
+}
+
+function ensureUserCookie() {
+  if (typeof document === "undefined") return;
+  if (!document.cookie.includes("sparkproof_uid=")) {
+    const uid = `sp_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+    document.cookie = `sparkproof_uid=${uid}; path=/; max-age=2592000; SameSite=Lax`;
+  }
+}
+
+export default function HomePage() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [viewMode, setViewMode] = useState<ViewMode>("hero");
+  const [quota, setQuota] = useState<UsageQuotaInfo | null>(null);
+  const [history, setHistory] = useState<StartupReport[]>([]);
+  const [activeReport, setActiveReport] = useState<StartupReport | null>(null);
+  const [partial, setPartial] = useState<PartialReportData>({});
+  const [nodes, setNodes] = useState<Record<AgentNodeId, AgentNodeState>>(
+    createInitialNodes
+  );
+  const [runningIdeaText, setRunningIdeaText] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const isPausedRef = useRef(false);
+  const queuedEventsRef = useRef<AgentSSEEvent[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 2800);
+  }, []);
+
+  useEffect(() => {
+    ensureUserCookie();
+
+    Promise.resolve().then(() => {
+      try {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme === "dark" || savedTheme === "light") {
+          setTheme(savedTheme);
+          document.documentElement.setAttribute("data-theme", savedTheme);
+        }
+      } catch {
+        // Ignore storage errors
+      }
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as StartupReport[];
+          if (Array.isArray(parsed)) setHistory(parsed);
+        }
+      } catch {
+        // Ignore corrupt localStorage
+      }
+    });
+
+    fetch("/api/analyze")
+      .then((r) => r.json())
+      .then((data: { quota?: UsageQuotaInfo }) => {
+        if (data.quota) setQuota(data.quota);
+      })
+      .catch(() => {});
+
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  const handleToggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const persistReport = useCallback((report: StartupReport) => {
+    setHistory((prev) => {
+      const next = [report, ...prev.filter((r) => r.id !== report.id)].slice(
+        0,
+        15
+      );
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage quota full
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDeleteReport = (id: string) => {
+    setHistory((prev) => {
+      const next = prev.filter((r) => r.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
+    if (activeReport?.id === id) {
+      setActiveReport(null);
+      setPartial({});
+      setViewMode("hero");
+    }
+    showToast("Saved dossier deleted");
+  };
+
+  const handleLoadPreset = (preset: StartupReport) => {
+    if (isRunning) {
+      abortControllerRef.current?.abort();
+      setIsRunning(false);
+    }
+    setErrorMessage(null);
+    setRunningIdeaText(null);
+    setPartial({});
+    setActiveReport(preset);
+    setViewMode("report");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const applySseEvent = useCallback(
+    (ev: AgentSSEEvent) => {
+      if (ev.type === "quota") {
+        setQuota(ev.quota);
+      } else if (ev.type === "stage") {
+        setNodes((prev) => ({
+          ...prev,
+          [ev.agent]: {
+            ...prev[ev.agent],
+            status: ev.status,
+            message: ev.message,
+            queries: ev.queries ?? prev[ev.agent].queries,
+            sources: ev.sources ?? prev[ev.agent].sources,
+            provider: ev.provider ?? prev[ev.agent].provider,
+          },
+        }));
+      } else if (ev.type === "partial") {
+        setPartial((prev) => ({
+          ...prev,
+          [ev.section]:
+            ev.section === "framer"
+              ? (ev.data as FramerOutput)
+              : ev.section === "market"
+                ? (ev.data as MarketOutput)
+                : ev.section === "competitors"
+                  ? (ev.data as CompetitorOutput)
+                  : ev.section === "customers"
+                    ? (ev.data as CustomerOutput)
+                    : ev.section === "validator"
+                      ? (ev.data as ValidatorOutput)
+                      : (ev.data as PlannerOutput),
+        }));
+      } else if (ev.type === "complete") {
+        setQuota(ev.quota);
+        setActiveReport(ev.report);
+        persistReport(ev.report);
+        setViewMode("report");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (ev.type === "error") {
+        if (ev.quota) setQuota(ev.quota);
+        setErrorMessage(ev.message);
+      }
+    },
+    [persistReport]
+  );
+
+  const handleTogglePause = () => {
+    const nextPaused = !isPausedRef.current;
+    isPausedRef.current = nextPaused;
+    setIsPaused(nextPaused);
+
+    if (!nextPaused && queuedEventsRef.current.length > 0) {
+      const buffered = queuedEventsRef.current.splice(0);
+      for (const ev of buffered) {
+        applySseEvent(ev);
+      }
+    }
+  };
+
+  const runLiveAnalysis = async (input: AnalysisInput) => {
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    ensureUserCookie();
+    setErrorMessage(null);
+    setActiveReport(null);
+    setPartial({});
+    setNodes(createInitialNodes());
+    setRunningIdeaText(input.idea);
+    setIsPaused(false);
+    isPausedRef.current = false;
+    queuedEventsRef.current = [];
+    setIsRunning(true);
+    setViewMode("validating");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    let receivedAnyPartial = false;
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const errBody = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          quota?: UsageQuotaInfo;
+        };
+        if (errBody.quota) setQuota(errBody.quota);
+        setErrorMessage(
+          errBody.error || `Request failed (${res.status}). Please try again.`
+        );
+        setRunningIdeaText(null);
+        setIsRunning(false);
+        setViewMode("hero");
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() || "";
+
+        for (const chunk of chunks) {
+          const line = chunk
+            .split("\n")
+            .find((l) => l.startsWith("data: "));
+          if (!line) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6)) as AgentSSEEvent;
+            if (parsed.type === "partial" || parsed.type === "complete") {
+              receivedAnyPartial = true;
+            }
+            if (isPausedRef.current) {
+              queuedEventsRef.current.push(parsed);
+            } else {
+              applySseEvent(parsed);
+            }
+          } catch {
+            // Ignore partial/malformed SSE chunk
+          }
+        }
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Network error while streaming agent updates."
+      );
+      if (!receivedAnyPartial) {
+        setViewMode("hero");
+      }
+    } finally {
+      if (queuedEventsRef.current.length > 0) {
+        const remaining = queuedEventsRef.current.splice(0);
+        for (const ev of remaining) {
+          applySseEvent(ev);
+        }
+      }
+      isPausedRef.current = false;
+      setIsPaused(false);
+      setIsRunning(false);
+    }
+  };
+
+  const handleResetToHero = () => {
+    abortControllerRef.current?.abort();
+    isPausedRef.current = false;
+    queuedEventsRef.current = [];
+    setIsPaused(false);
+    setIsRunning(false);
+    setActiveReport(null);
+    setPartial({});
+    setRunningIdeaText(null);
+    setErrorMessage(null);
+    setViewMode("hero");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const hasPartialReport = Boolean(
+    activeReport ||
+      partial.framer ||
+      partial.market ||
+      partial.competitors ||
+      partial.customers ||
+      partial.validator ||
+      partial.planner
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <div className="ambient-backdrop" aria-hidden="true" />
+
+      <Navbar
+        quota={quota}
+        historyCount={history.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        onOpenHistory={() => setHistoryOpen(true)}
+        onResetToHero={handleResetToHero}
+      />
+
+      <main className="spark-main">
+        {viewMode === "hero" && (
+          <HeroInput
+            isRunning={isRunning}
+            errorMessage={errorMessage}
+            onSubmitIdea={runLiveAnalysis}
+            onLoadPreset={handleLoadPreset}
+            onShowToast={showToast}
+          />
+        )}
+
+        {viewMode !== "hero" && errorMessage && (
+          <div className="error-banner" role="alert">
+            <span>{errorMessage}</span>
+            {!isRunning && !hasPartialReport && (
+              <button
+                type="button"
+                className="nav-btn"
+                onClick={handleResetToHero}
+              >
+                Back
+              </button>
+            )}
+          </div>
+        )}
+
+        {viewMode === "validating" && runningIdeaText && (
+          <AgentMissionControl
+            ideaText={runningIdeaText}
+            startupTitle={activeReport?.framer.startupTitle ?? partial.framer?.startupTitle}
+            nodes={nodes}
+            isRunning={isRunning}
+            isPaused={isPaused}
+            hasPartialReport={hasPartialReport}
+            onTogglePause={handleTogglePause}
+            onSkipToReport={() => {
+              if (isPausedRef.current) handleTogglePause();
+              setViewMode("report");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        )}
+
+        {viewMode === "report" && (
+          <ReportWorkspace
+            report={activeReport}
+            partial={partial}
+            isRunning={isRunning}
+            onOpenCopilot={() => setCopilotOpen(true)}
+            onRerunLive={() => {
+              if (activeReport) {
+                runLiveAnalysis(activeReport.input);
+              }
+            }}
+            onBackToProgress={
+              isRunning && runningIdeaText
+                ? () => {
+                    setViewMode("validating");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                : undefined
+            }
+            onShowToast={showToast}
+          />
+        )}
       </main>
-    </div>
+
+      <HistoryDrawer
+        open={historyOpen}
+        reports={history}
+        activeReportId={activeReport?.id ?? null}
+        onClose={() => setHistoryOpen(false)}
+        onSelectReport={(rep) => {
+          if (isRunning) {
+            abortControllerRef.current?.abort();
+            setIsRunning(false);
+          }
+          setRunningIdeaText(null);
+          setPartial({});
+          setErrorMessage(null);
+          setActiveReport(rep);
+          setViewMode("report");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onDeleteReport={handleDeleteReport}
+      />
+
+      <CopilotDrawer
+        key={activeReport?.id ?? "empty"}
+        open={copilotOpen}
+        report={activeReport}
+        onClose={() => setCopilotOpen(false)}
+        onQuotaUpdate={(q) => setQuota(q)}
+      />
+
+      {toastMessage && (
+        <div className="toast" role="status" aria-live="polite">
+          <CheckCircle2 size={15} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+    </>
   );
 }
