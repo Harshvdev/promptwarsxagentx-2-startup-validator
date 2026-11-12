@@ -80,22 +80,33 @@ export const CompetitorOutputSchema = z.object({
 export type CompetitorOutput = z.infer<typeof CompetitorOutputSchema>;
 
 export const CustomerPersonaSchema = z.object({
-  name: z.string(),
-  roleOrSegment: z.string(),
-  side: z.string(),
-  topPainPoints: z.array(z.string()).min(1).max(5),
-  currentWorkaround: z.string(),
-  willingnessToPay: z.string(),
-  acquisitionChannels: z.array(z.string()).min(1).max(5),
+  name: z.string().default("Primary Persona"),
+  roleOrSegment: z.string().default("Early Adopter"),
+  side: z.string().default("Primary User"),
+  topPainPoints: z.array(z.string()).min(1).max(5).default(["Unreliable current workflow", "High friction and cost"]),
+  currentWorkaround: z.string().default("Manual spreadsheets or ad-hoc messaging"),
+  willingnessToPay: z.string().default("Moderate initial budget"),
+  acquisitionChannels: z.array(z.string()).min(1).max(5).default(["Direct community outreach", "Search / Social"]),
 });
 
 export type CustomerPersona = z.infer<typeof CustomerPersonaSchema>;
 
 export const CustomerOutputSchema = z.object({
-  targetSummary: z.string(),
-  personas: z.array(CustomerPersonaSchema).min(1).max(4),
-  interviewQuestions: z.array(z.string()).min(3).max(7),
-  earlyAdopterHook: z.string(),
+  targetSummary: z.string().default("Early adopter customer summary."),
+  personas: z.array(CustomerPersonaSchema).min(1).max(4).default([]),
+  interviewQuestions: z
+    .array(z.string())
+    .min(1)
+    .max(8)
+    .default([
+      "How do you handle this problem today, and what workarounds have failed?",
+      "When was the last time you spent money trying to fix this?",
+      "What is the most frustrating part of the current solution?",
+      "Who else on your team or in your household is impacted by this?",
+    ]),
+  earlyAdopterHook: z
+    .string()
+    .default("A direct, high-value solution for people frustrated by today's broken workarounds."),
   sources: z.array(SourceCitationSchema).default([]),
 });
 

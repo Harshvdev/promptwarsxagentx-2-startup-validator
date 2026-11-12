@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-3.8-flash",
+];
 const GROQ_MODELS = [
   "openai/gpt-oss-120b",
   "qwen/qwen3.6-27b",
@@ -55,13 +60,7 @@ async function callGemini(
     throw new Error(cachedInvalid.message);
   }
 
-  // Google AQ.* keys may belong to Vertex AI Express Mode or AI Studio.
-  const aiStudioUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-  const vertexExpressUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/${GEMINI_MODEL}:generateContent`;
-  const endpoints = apiKey.startsWith("AQ.")
-    ? [vertexExpressUrl, aiStudioUrl]
-    : [aiStudioUrl];
-
+  // Google AI Studio Authorization keys (AQ.*) are restricted to Generative Language API
   const body: Record<string, unknown> = {
     systemInstruction: {
       parts: [{ text: systemPrompt }],
@@ -80,7 +79,8 @@ async function callGemini(
 
   let lastError = "Gemini request failed";
 
-  for (const endpoint of endpoints) {
+  for (const model of GEMINI_MODELS) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     const res = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -93,9 +93,12 @@ async function callGemini(
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      lastError = `Gemini ${parseApiError(res.status, errText)}`;
-      if (res.status === 400 || res.status === 401 || res.status === 403 || res.status === 404) {
+      lastError = `Gemini ${model} ${parseApiError(res.status, errText)}`;
+      if (res.status === 404 || res.status === 429 || res.status === 503) {
         continue;
+      }
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        break;
       }
       throw new Error(lastError);
     }
@@ -108,7 +111,7 @@ async function callGemini(
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      throw new Error("Gemini returned empty response");
+      continue;
     }
     return text;
   }
@@ -160,7 +163,7 @@ async function postGroqCompletion(
     body: JSON.stringify({
       model,
       temperature: 0.35,
-      max_tokens: 1800,
+      max_tokens: 2600,
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
       messages: [
         { role: "system", content: systemPrompt },
@@ -227,7 +230,11 @@ async function discoverGroqModels(apiKey: string): Promise<string[]> {
           !id.includes("guard") &&
           !id.includes("tts") &&
           !id.includes("safeguard") &&
-          !id.includes("compound")
+          !id.includes("compound") &&
+          !id.includes("orpheus") &&
+          !id.includes("playai") &&
+          !id.includes("allam") &&
+          !id.includes("embed")
       );
   } catch {
     return [];
@@ -324,8 +331,18 @@ ${opts.schemaHint}`;
 
   const tryParse = (raw: string): T => {
     const jsonStr = extractJsonText(raw);
-    const parsed = JSON.parse(jsonStr);
-    return opts.schema.parse(parsed);
+    const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
+    const direct = opts.schema.safeParse(parsed);
+    if (direct.success) return direct.data;
+
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const keys = Object.keys(parsed);
+      if (keys.length === 1 && parsed[keys[0]] && typeof parsed[keys[0]] === "object") {
+        const unwrapped = opts.schema.safeParse(parsed[keys[0]]);
+        if (unwrapped.success) return unwrapped.data;
+      }
+    }
+    throw direct.error;
   };
 
   const formatErr = (e: unknown) => {
@@ -340,12 +357,15 @@ ${opts.schemaHint}`;
     return { data: tryParse(raw), provider: "Gemini" };
   } catch (geminiErr) {
     let lastGroqErr: unknown;
-    for (let attempt = 0; attempt < 2; attempt++) {
+    let promptForAttempt = opts.userPrompt;
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const raw = await callGroq(fullSystem, opts.userPrompt, true);
+        const raw = await callGroq(fullSystem, promptForAttempt, true);
         return { data: tryParse(raw), provider: "Groq" };
       } catch (err) {
         lastGroqErr = err;
+        const detail = formatErr(err);
+        promptForAttempt = `${opts.userPrompt}\n\nVALIDATION FIX NEEDED (${detail}): Return ONE flat JSON object containing EVERY top-level key shown in the schema, with concise 1-2 sentence strings so nothing gets omitted.`;
       }
     }
     throw new Error(
