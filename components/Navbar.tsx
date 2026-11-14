@@ -110,6 +110,21 @@ export function Navbar({
 
           <button
             type="button"
+            className="theme-btn lp-history-btn-mobile"
+            onClick={onOpenHistory}
+            title="Saved reports"
+            aria-label={`Saved reports (${historyCount})`}
+          >
+            <Clock3 className="h-4 w-4" aria-hidden="true" />
+            {historyCount > 0 && (
+              <span className="lp-mobile-history-badge" aria-hidden="true">
+                {historyCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             className="theme-btn"
             onClick={onToggleTheme}
             title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}

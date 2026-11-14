@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -143,6 +143,18 @@ export function ReportWorkspace({
   const [copiedScript, setCopiedScript] = useState(false);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
+  useEffect(() => {
+    if (showAllSections) return;
+    const idx = TABS.findIndex((t) => t.id === activeTab);
+    if (idx !== -1 && tabRefs.current[idx]) {
+      tabRefs.current[idx]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [activeTab, showAllSections]);
+
   const framer = report?.framer ?? partial.framer;
   const market = report?.market ?? partial.market;
   const competitors = report?.competitors ?? partial.competitors;
@@ -217,7 +229,7 @@ export function ReportWorkspace({
   const isSectionVisible = (id: TabId) => showAllSections || activeTab === id;
 
   return (
-    <section className="view-enter">
+    <section className="view-enter report-workspace">
       {/* Preset Notice Banner */}
       {report?.isPreset && (
         <div className="preset-notice-banner">

@@ -3179,23 +3179,50 @@ dialog.spark-drawer::backdrop {
   .telemetry-val {
     font-size: 0.78rem;
   }
+  .report-workspace {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
   .report-nav-bar {
     top: 56px;
     padding: 8px 0;
     margin-bottom: 14px;
-    gap: 8px;
+    gap: 6px;
+    display: flex;
+    align-items: center;
+    background: var(--bg-canvas);
+  }
+  .section-tabs {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 8px;
+    mask-image: linear-gradient(to right, black 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 86%, transparent 100%);
+  }
+  .section-tabs::-webkit-scrollbar {
+    display: none;
   }
   .sec-tab {
-    padding: 7px 11px;
+    flex: none;
+    scroll-snap-align: center;
+    padding: 7px 12px;
     font-size: 0.8rem;
     gap: 5px;
     min-height: 36px;
+    white-space: nowrap;
   }
   .expand-all-btn {
-    padding: 6px 10px;
-    font-size: 0.75rem;
+    padding: 6px 11px;
+    font-size: 0.74rem;
     min-height: 36px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
   .gauge-wrap {
     width: 146px;
@@ -3207,6 +3234,15 @@ dialog.spark-drawer::backdrop {
   }
   .comp-card {
     padding: 16px;
+  }
+  .comp-head {
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .comp-name-link {
+    font-size: 1rem;
+    word-break: break-word;
   }
   .comp-cols {
     grid-template-columns: 1fr !important;
@@ -3235,6 +3271,21 @@ dialog.spark-drawer::backdrop {
   }
   .phase-card {
     padding: 16px;
+  }
+  .orch-top-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .orch-controls {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .orch-controls .nav-btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 42px;
   }
   .floating-copilot-fab {
     right: 16px;
@@ -3585,6 +3636,41 @@ dialog.spark-drawer::backdrop {
   width: 16px;
   height: 16px;
   stroke-width: 2.2;
+}
+
+.lp-history-btn-mobile {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .lp-history-btn-mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border-radius: 8px;
+  }
+}
+
+.lp-mobile-history-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--orange-500);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ---------- Hero shell ---------- */
@@ -4596,21 +4682,69 @@ dialog.spark-drawer::backdrop {
     width: 100%;
   }
 
+  .lp-idea-input {
+    font-size: 16px; /* Prevents mobile Safari zoom */
+    height: 110px;
+    padding: 12px 14px 28px;
+    scrollbar-width: none;
+  }
+
+  .lp-idea-input::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lp-char-count {
+    right: 12px;
+    bottom: 8px;
+    font-size: 11px;
+  }
+
   .lp-analysis-row {
+    display: flex;
     flex-wrap: wrap;
-    gap: 8px 0;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 0 6px;
+    border-top: 1px solid var(--border-hairline);
+  }
+
+  .lp-analysis-label {
+    width: 100%;
+    padding-right: 0;
+    margin-bottom: 2px;
+    font-size: 12.5px;
+    font-weight: 600;
   }
 
   .lp-analysis-item {
-    padding: 0 12px;
+    padding: 5px 10px !important;
+    border: 1px solid var(--border-hairline) !important;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .lp-analysis-item:first-of-type {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border-hairline) !important;
   }
 
   .lp-examples-head {
-    gap: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .lp-examples-title {
-    font-size: 19px;
+    font-size: 18px;
+  }
+
+  .lp-examples-all {
+    margin-left: auto;
+    font-size: 13px;
   }
 
   .lp-examples-rule {
@@ -4623,5 +4757,25 @@ dialog.spark-drawer::backdrop {
 
   .lp-example-card {
     min-height: 0;
+  }
+
+  .lp-header-right {
+    gap: 8px;
+  }
+
+  .lp-new-idea {
+    padding: 0 12px 0 10px;
+    font-size: 12.5px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 380px) {
+  .lp-new-idea span {
+    display: none;
+  }
+  .lp-new-idea {
+    padding: 0;
+    width: 34px;
   }
 }
