@@ -158,6 +158,22 @@ export const PlannerOutputSchema = z.object({
 
 export type PlannerOutput = z.infer<typeof PlannerOutputSchema>;
 
+export const CopilotRequestSchema = z.object({
+  question: z.string().trim().min(3).max(600),
+  useLiveWeb: z.boolean().default(false),
+  report: z.custom<StartupReport>((v) => Boolean(v && typeof v === "object")),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      })
+    )
+    .max(12)
+    .default([]),
+});
+export type CopilotRequest = z.infer<typeof CopilotRequestSchema>;
+
 export interface UsageQuotaInfo {
   analysesRemaining: number;
   analysesLimit: number;

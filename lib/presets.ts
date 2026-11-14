@@ -838,6 +838,7 @@ export const DEMO_PRESETS: StartupReport[] = [
           objective: "Lock in low-churn B2B agency contracts.",
           actions: [
             "Launch multi-creator workspace for boutique talent managers (\$199–\$299/mo).",
+            "Integrate automated invoice tracking and agency-wide sponsorship reporting dashboard.",
           ],
           successMetric: "5 talent agencies onboarded (\$2,000+ MRR)",
         },

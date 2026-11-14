@@ -134,39 +134,41 @@ export default function HomePage() {
   useEffect(() => {
     ensureUserCookie();
 
-    try {
-      const activeTheme = document.documentElement.getAttribute("data-theme") as
-        | "light"
-        | "dark"
-        | null;
-      if (activeTheme === "dark" || activeTheme === "light") {
-        setTheme(activeTheme);
-      } else {
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === "dark" || savedTheme === "light") {
-          setTheme(savedTheme);
-          document.documentElement.setAttribute("data-theme", savedTheme);
-        } else if (
-          typeof window !== "undefined" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
-          setTheme("dark");
-          document.documentElement.setAttribute("data-theme", "dark");
+    queueMicrotask(() => {
+      try {
+        const activeTheme = document.documentElement.getAttribute("data-theme") as
+          | "light"
+          | "dark"
+          | null;
+        if (activeTheme === "dark" || activeTheme === "light") {
+          setTheme(activeTheme);
+        } else {
+          const savedTheme = localStorage.getItem(THEME_KEY);
+          if (savedTheme === "dark" || savedTheme === "light") {
+            setTheme(savedTheme);
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          } else if (
+            typeof window !== "undefined" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            setTheme("dark");
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
         }
+      } catch {
+        // Ignore storage errors
       }
-    } catch {
-      // Ignore storage errors
-    }
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as StartupReport[];
-        if (Array.isArray(parsed)) setHistory(parsed);
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as StartupReport[];
+          if (Array.isArray(parsed)) setHistory(parsed);
+        }
+      } catch {
+        // Ignore corrupt localStorage
       }
-    } catch {
-      // Ignore corrupt localStorage
-    }
+    });
 
     fetch("/api/analyze")
       .then((r) => r.json())

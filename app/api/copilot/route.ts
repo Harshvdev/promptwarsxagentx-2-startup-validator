@@ -1,25 +1,9 @@
 import { generateChatReply } from "@/lib/llm";
 import { consumeCopilotQuota, extractUserKey } from "@/lib/rate-limit";
 import { tinySearch } from "@/lib/tinyfish";
-import type { StartupReport } from "@/lib/types";
-import { z } from "zod";
+import { CopilotRequestSchema } from "@/lib/types";
 
 export const maxDuration = 60;
-
-const CopilotRequestSchema = z.object({
-  question: z.string().trim().min(3).max(600),
-  useLiveWeb: z.boolean().default(false),
-  report: z.custom<StartupReport>((v) => Boolean(v && typeof v === "object")),
-  history: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string(),
-      })
-    )
-    .max(12)
-    .default([]),
-});
 
 export async function POST(req: Request) {
   const userKey = extractUserKey(req);
