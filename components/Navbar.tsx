@@ -1,14 +1,12 @@
 "use client";
 
 import React from "react";
-import { History, Moon, Plus, Sun, Zap } from "lucide-react";
+import { BookOpen, Bookmark, Clock3, Plus, Search, Zap } from "lucide-react";
 import type { UsageQuotaInfo } from "@/lib/types";
 
 interface NavbarProps {
   quota: UsageQuotaInfo | null;
   historyCount: number;
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onOpenHistory: () => void;
   onResetToHero: () => void;
 }
@@ -16,8 +14,6 @@ interface NavbarProps {
 export function Navbar({
   quota,
   historyCount,
-  theme,
-  onToggleTheme,
   onOpenHistory,
   onResetToHero,
 }: NavbarProps) {
@@ -26,113 +22,82 @@ export function Navbar({
   const scrapeRem = quota?.deepScrapesRemaining ?? 2;
   const scrapeLimit = quota?.deepScrapesLimit ?? 2;
 
-  const livePct = Math.round((liveRem / Math.max(1, liveLimit)) * 100);
-  const scrapePct = Math.round((scrapeRem / Math.max(1, scrapeLimit)) * 100);
+  const handleNewIdea = () => {
+    onResetToHero();
+    window.setTimeout(() => {
+      const el = document.getElementById("lp-idea");
+      if (el instanceof HTMLTextAreaElement) el.focus();
+    }, 60);
+  };
+
+  const scrollToExamples = () => {
+    document
+      .getElementById("example-reports-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <header className="global-header no-print">
+    <header className="global-header lp-header no-print">
       <div className="header-inner">
         <button
           type="button"
-          className="brand"
+          className="lp-brand"
           onClick={onResetToHero}
-          title="Return to Idea Submission"
+          title="SparkProof Home"
+          aria-label="SparkProof home"
         >
-          <span className="brand-mark">
-            <Zap className="h-4 w-4" aria-hidden="true" />
+          <span className="lp-brand-mark">
+            <Zap size={17} strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
           </span>
-          <span>SparkProof</span>
+          <span className="lp-brand-name">SparkProof</span>
         </button>
 
-        <div className="header-controls">
-          <div
-            className="usage-wrapper"
-            tabIndex={0}
-            aria-label="Daily quota"
+        <nav className="lp-nav" aria-label="Main navigation">
+          <button
+            type="button"
+            className="lp-nav-link is-active"
+            onClick={onResetToHero}
+            aria-current="page"
           >
-            <div className="usage-pill">
-              <span className="usage-metric">
-                <span className="usage-dot" aria-hidden="true" />
-                <span>
-                  <strong className="mono">{liveRem}</strong>/{liveLimit} runs
-                </span>
-              </span>
-              <span className="usage-divider" aria-hidden="true" />
-              <span className="usage-metric">
-                <span className="usage-dot scrape" aria-hidden="true" />
-                <span>
-                  <strong className="mono">{scrapeRem}</strong>/{scrapeLimit} scrapes
-                </span>
-              </span>
-            </div>
+            <Search aria-hidden="true" />
+            <span>Validate</span>
+          </button>
 
-            <div className="usage-popover">
-              <div className="usage-popover-title">
-                <span>Daily Quota</span>
-                <span className="mono">24h</span>
-              </div>
-              <div className="usage-bar-row">
-                <div className="usage-bar-label">
-                  <span>Live Runs</span>
-                  <span className="mono">
-                    {liveRem}/{liveLimit}
-                  </span>
-                </div>
-                <div className="usage-track">
-                  <div
-                    className="usage-fill"
-                    style={{ width: `${livePct}%` }}
-                  />
-                </div>
-              </div>
-              <div className="usage-bar-row">
-                <div className="usage-bar-label">
-                  <span>Deep Scrapes</span>
-                  <span className="mono">
-                    {scrapeRem}/{scrapeLimit}
-                  </span>
-                </div>
-                <div className="usage-track">
-                  <div
-                    className="usage-fill scrape"
-                    style={{ width: `${scrapePct}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+          <button type="button" className="lp-nav-link" onClick={onOpenHistory}>
+            <Clock3 aria-hidden="true" />
+            <span>History</span>
+          </button>
+
+          <button type="button" className="lp-nav-link" onClick={onOpenHistory}>
+            <Bookmark aria-hidden="true" />
+            <span>Saved</span>
+            {historyCount > 0 && (
+              <span className="sr-only">{historyCount} saved reports</span>
+            )}
+          </button>
+
+          <button type="button" className="lp-nav-link" onClick={scrollToExamples}>
+            <BookOpen aria-hidden="true" />
+            <span>Learn</span>
+          </button>
+        </nav>
+
+        <div className="lp-header-right">
+          <div className="lp-quota-pill" title="Remaining runs and deep scrapes">
+            <span className="lp-quota-item">
+              <span className="lp-dot lp-dot-amber" aria-hidden="true" />
+              {liveRem}/{liveLimit} runs
+            </span>
+            <span className="lp-quota-divider" aria-hidden="true" />
+            <span className="lp-quota-item">
+              <span className="lp-dot lp-dot-green" aria-hidden="true" />
+              {scrapeRem}/{scrapeLimit} scrapes
+            </span>
           </div>
 
-          <button
-            type="button"
-            className="nav-btn"
-            onClick={onOpenHistory}
-          >
-            <History className="h-4 w-4" aria-hidden="true" />
-            <span>History</span>
-            <span className="count-badge">{historyCount}</span>
-          </button>
-
-          <button
-            type="button"
-            className="nav-btn nav-btn-primary"
-            onClick={onResetToHero}
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+          <button type="button" className="lp-new-idea" onClick={handleNewIdea}>
+            <Plus aria-hidden="true" />
             <span>New Idea</span>
-          </button>
-
-          <button
-            type="button"
-            className="theme-btn"
-            onClick={onToggleTheme}
-            title="Switch Light / Dark Theme"
-            aria-label="Toggle color theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Moon className="h-4 w-4" aria-hidden="true" />
-            )}
           </button>
         </div>
       </div>

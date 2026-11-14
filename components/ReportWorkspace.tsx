@@ -280,7 +280,7 @@ export function ReportWorkspace({
                   </button>
                   <button
                     type="button"
-                    className="action-btn"
+                    className="action-btn action-btn-print"
                     onClick={() => window.print()}
                   >
                     <Printer className="h-4 w-4" aria-hidden="true" />

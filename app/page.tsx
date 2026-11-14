@@ -7,7 +7,7 @@ import {
   type AgentNodeState,
 } from "@/components/AgentMissionControl";
 import { CopilotDrawer } from "@/components/CopilotDrawer";
-import { HeroInput } from "@/components/HeroInput";
+import { LandingPage } from "@/components/LandingPage";
 import { HistoryDrawer } from "@/components/HistoryDrawer";
 import { Navbar } from "@/components/Navbar";
 import {
@@ -29,7 +29,6 @@ import type {
 } from "@/lib/types";
 
 const STORAGE_KEY = "sparkproof_reports_v1";
-const THEME_KEY = "sparkproof_theme_v1";
 
 type ViewMode = "hero" | "validating" | "report";
 
@@ -101,7 +100,6 @@ function ensureUserCookie() {
 }
 
 export default function HomePage() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [viewMode, setViewMode] = useState<ViewMode>("hero");
   const [quota, setQuota] = useState<UsageQuotaInfo | null>(null);
   const [history, setHistory] = useState<StartupReport[]>([]);
@@ -136,16 +134,6 @@ export default function HomePage() {
 
     Promise.resolve().then(() => {
       try {
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === "dark" || savedTheme === "light") {
-          setTheme(savedTheme);
-          document.documentElement.setAttribute("data-theme", savedTheme);
-        }
-      } catch {
-        // Ignore storage errors
-      }
-
-      try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved) as StartupReport[];
@@ -168,17 +156,6 @@ export default function HomePage() {
       abortControllerRef.current?.abort();
     };
   }, []);
-
-  const handleToggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      // Ignore storage errors
-    }
-  };
 
   const persistReport = useCallback((report: StartupReport) => {
     setHistory((prev) => {
@@ -415,15 +392,13 @@ export default function HomePage() {
       <Navbar
         quota={quota}
         historyCount={history.length}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
         onOpenHistory={() => setHistoryOpen(true)}
         onResetToHero={handleResetToHero}
       />
 
-      <main className="spark-main">
+      <main className={viewMode === "hero" ? "spark-main lp-main" : "spark-main"}>
         {viewMode === "hero" && (
-          <HeroInput
+          <LandingPage
             isRunning={isRunning}
             errorMessage={errorMessage}
             onSubmitIdea={runLiveAnalysis}

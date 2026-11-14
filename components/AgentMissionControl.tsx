@@ -158,11 +158,11 @@ export function AgentMissionControl({
         </div>
 
         <div className="orch-progress-meta">
-          <span>{stageLabel}</span>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <span className="orch-stage-label">{stageLabel}</span>
+          <div className="orch-timer-group">
             {isRunning && (
               <span
-                className="tag-pill mono"
+                className="tag-pill mono orch-est-badge"
                 style={{
                   background: "var(--orange-50)",
                   color: "var(--orange-700)",
@@ -170,10 +170,10 @@ export function AgentMissionControl({
                   fontSize: "0.72rem",
                 }}
               >
-                ~{estSecondsRemaining}s remaining
+                ~{estSecondsRemaining}s left
               </span>
             )}
-            <span className="mono">{formattedTime}</span>
+            <span className="mono orch-time-val">{formattedTime}</span>
           </div>
         </div>
         <div className="orch-track">

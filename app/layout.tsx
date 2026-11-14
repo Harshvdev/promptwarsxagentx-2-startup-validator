@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  style: ["normal", "italic"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -15,9 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SparkProof — Multi-Agent Startup Idea Validation",
+  title: "SparkProof — Find the weak point before you build",
   description:
-    "Six autonomous research agents interrogate live market sizing, competitor pricing, customer pain points, fatal risks, and a 90-day execution wedge.",
+    "Validate your startup idea with real market data, competitor analysis, customer insights, risk assessment and a 90-day roadmap — in ~60s.",
 };
 
 export default function RootLayout({
@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en"
       data-theme="light"
       suppressHydrationWarning
-      className={`${plusJakarta.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body>{children}</body>
     </html>
