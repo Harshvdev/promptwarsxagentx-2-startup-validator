@@ -5,9 +5,9 @@
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.4.6-black)](https://nextjs.org)
 [![Bun](https://img.shields.io/badge/Runtime-Bun%201.3-orange)](https://bun.com)
 [![Tests](https://img.shields.io/badge/Tests-12%20Passed-success)](tests/pipeline.test.ts)
-[![Deployment](https://img.shields.io/badge/Live-Vercel-success)](https://sparkproof-promptwarsxagentx-20.vercel.app/)
+[![Deployment](https://img.shields.io/badge/Live-Vercel-success)](https://sparkproof.vercel.app/)
 
-> **Live Application:** [https://sparkproof-promptwarsxagentx-20.vercel.app/](https://sparkproof-promptwarsxagentx-20.vercel.app/)  
+> **Live Application:** [https://sparkproof.vercel.app/](https://sparkproof.vercel.app/)  
 > **Repository:** [https://github.com/Harshvdev/promptwarsxagentx-2-startup-validator](https://github.com/Harshvdev/promptwarsxagentx-2-startup-validator)
 
 ---
@@ -171,6 +171,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Deployment
 
 The application is deployed on **Vercel** with Next.js App Router:
-- **Production URL:** [https://sparkproof-promptwarsxagentx-20.vercel.app/](https://sparkproof-promptwarsxagentx-20.vercel.app/)
+- **Production URL:** [https://sparkproof.vercel.app/](https://sparkproof.vercel.app/)
 - **Vercel Config:** `maxDuration: 300` on `/api/analyze` and `maxDuration: 60` on `/api/copilot` configured in [vercel.json](vercel.json).
 - **Edge Performance:** Sub-500ms TTFB with HSTS and asset preloading.
