@@ -29,6 +29,7 @@ import type {
 } from "@/lib/types";
 
 const STORAGE_KEY = "sparkproof_reports_v1";
+const THEME_KEY = "sparkproof_theme_v1";
 
 type ViewMode = "hero" | "validating" | "report";
 
@@ -100,6 +101,7 @@ function ensureUserCookie() {
 }
 
 export default function HomePage() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [viewMode, setViewMode] = useState<ViewMode>("hero");
   const [quota, setQuota] = useState<UsageQuotaInfo | null>(null);
   const [history, setHistory] = useState<StartupReport[]>([]);
@@ -132,17 +134,39 @@ export default function HomePage() {
   useEffect(() => {
     ensureUserCookie();
 
-    Promise.resolve().then(() => {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as StartupReport[];
-          if (Array.isArray(parsed)) setHistory(parsed);
+    try {
+      const activeTheme = document.documentElement.getAttribute("data-theme") as
+        | "light"
+        | "dark"
+        | null;
+      if (activeTheme === "dark" || activeTheme === "light") {
+        setTheme(activeTheme);
+      } else {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme === "dark" || savedTheme === "light") {
+          setTheme(savedTheme);
+          document.documentElement.setAttribute("data-theme", savedTheme);
+        } else if (
+          typeof window !== "undefined" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          setTheme("dark");
+          document.documentElement.setAttribute("data-theme", "dark");
         }
-      } catch {
-        // Ignore corrupt localStorage
       }
-    });
+    } catch {
+      // Ignore storage errors
+    }
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as StartupReport[];
+        if (Array.isArray(parsed)) setHistory(parsed);
+      }
+    } catch {
+      // Ignore corrupt localStorage
+    }
 
     fetch("/api/analyze")
       .then((r) => r.json())
@@ -156,6 +180,22 @@ export default function HomePage() {
       abortControllerRef.current?.abort();
     };
   }, []);
+
+  const handleToggleTheme = () => {
+    const currentTheme =
+      (document.documentElement.getAttribute("data-theme") as
+        | "light"
+        | "dark"
+        | null) || theme;
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    try {
+      localStorage.setItem(THEME_KEY, nextTheme);
+    } catch {
+      // Ignore storage errors
+    }
+  };
 
   const persistReport = useCallback((report: StartupReport) => {
     setHistory((prev) => {
@@ -392,6 +432,8 @@ export default function HomePage() {
       <Navbar
         quota={quota}
         historyCount={history.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenHistory={() => setHistoryOpen(true)}
         onResetToHero={handleResetToHero}
       />

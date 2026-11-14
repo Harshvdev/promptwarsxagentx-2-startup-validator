@@ -109,8 +109,8 @@ function ResearchSnapshot() {
           >
             <defs>
               <linearGradient id="lp-spark-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2f6ff5" stopOpacity="0.11" />
-                <stop offset="100%" stopColor="#2f6ff5" stopOpacity="0" />
+                <stop offset="0%" stopColor="#f97316" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
               </linearGradient>
             </defs>
             <path
@@ -120,7 +120,7 @@ function ResearchSnapshot() {
             <path
               d="M0 47 L10 43 L20 45 L30 37 L40 40 L50 32 L60 35 L70 28 L80 31 L90 24 L100 27 L110 21 L120 23 L130 16 L140 19 L150 12 L160 15 L170 8 L180 11 L190 4 L200 7 L210 0"
               fill="none"
-              stroke="#2f6ff5"
+              stroke="#f97316"
               strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -217,7 +217,7 @@ export function LandingPage({
   const [region, setRegion] = useState("United States");
   const [businessModel, setBusinessModel] =
     useState<AnalysisInput["businessModel"]>("Auto-detect");
-  const [enableDeepScrape, setEnableDeepScrape] = useState(false);
+  const [enableDeepScrape, setEnableDeepScrape] = useState(true);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const trimmed = idea.trim();
@@ -283,7 +283,7 @@ export function LandingPage({
             Find the weak point
             <br />
             <span className="lp-h1-accent">before</span> you{" "}
-            <span className="lp-h1-blue">build.</span>
+            <span className="lp-h1-orange">build.</span>
           </h1>
           <p className="lp-sub">
             Validate your startup idea with real market data, competitor
@@ -395,14 +395,14 @@ export function LandingPage({
                 className="lp-switch"
                 role="switch"
                 aria-checked={enableDeepScrape}
-                aria-label="Enable deep scrape"
+                aria-label="Enable deep search"
                 onClick={() => setEnableDeepScrape((value) => !value)}
               />
               <label
                 className="lp-deep-label"
                 onClick={() => setEnableDeepScrape((value) => !value)}
               >
-                <span>Deep Scrape</span>
+                <span>Deep Search</span>
                 <CircleHelp aria-hidden="true" />
               </label>
             </div>

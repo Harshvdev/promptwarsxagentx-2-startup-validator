@@ -165,7 +165,7 @@ export function HeroInput({
           {/* 5 Feature Pills Row */}
           <div className="hero-feature-pills">
             <div className="feat-pill">
-              <BarChart2 className="h-3.5 w-3.5 text-blue-400" aria-hidden="true" />
+              <BarChart2 className="h-3.5 w-3.5 text-orange-400" aria-hidden="true" />
               <span>Market size</span>
             </div>
             <div className="feat-pill">

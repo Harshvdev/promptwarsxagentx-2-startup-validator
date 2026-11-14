@@ -1,12 +1,23 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Bookmark, Clock3, Plus, Search, Zap } from "lucide-react";
+import {
+  BookOpen,
+  Bookmark,
+  Clock3,
+  Moon,
+  Plus,
+  Search,
+  Sun,
+  Zap,
+} from "lucide-react";
 import type { UsageQuotaInfo } from "@/lib/types";
 
 interface NavbarProps {
   quota: UsageQuotaInfo | null;
   historyCount: number;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
   onOpenHistory: () => void;
   onResetToHero: () => void;
 }
@@ -14,6 +25,8 @@ interface NavbarProps {
 export function Navbar({
   quota,
   historyCount,
+  theme,
+  onToggleTheme,
   onOpenHistory,
   onResetToHero,
 }: NavbarProps) {
@@ -94,6 +107,20 @@ export function Navbar({
               {scrapeRem}/{scrapeLimit} scrapes
             </span>
           </div>
+
+          <button
+            type="button"
+            className="theme-btn"
+            onClick={onToggleTheme}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label="Toggle color theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Moon className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
 
           <button type="button" className="lp-new-idea" onClick={handleNewIdea}>
             <Plus aria-hidden="true" />
