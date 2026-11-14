@@ -58,6 +58,9 @@ describe("PS08 Startup Co-Pilot: Input & Schema Validation", () => {
     };
     const parsed = AnalysisInputSchema.safeParse(minimal);
     expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.region).toBe("India");
+    }
   });
 
   test("validates copilot inquiry schema correctly", () => {

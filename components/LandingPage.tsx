@@ -43,9 +43,9 @@ const BUSINESS_MODELS: AnalysisInput["businessModel"][] = [
 ];
 
 const REGIONS = [
-  "United States",
-  "Global",
   "India",
+  "Global",
+  "United States",
   "US & India Metro Cities",
   "Europe / UK",
 ];
@@ -214,7 +214,7 @@ export function LandingPage({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [idea, setIdea] = useState("");
-  const [region, setRegion] = useState("United States");
+  const [region, setRegion] = useState("India");
   const [businessModel, setBusinessModel] =
     useState<AnalysisInput["businessModel"]>("Auto-detect");
   const [enableDeepScrape, setEnableDeepScrape] = useState(true);

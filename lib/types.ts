@@ -6,7 +6,7 @@ export const AnalysisInputSchema = z.object({
     .trim()
     .min(10, "Please describe your startup idea in at least 10 characters.")
     .max(1200, "Please keep your idea description under 1200 characters."),
-  region: z.string().trim().min(2).max(60).default("Global"),
+  region: z.string().trim().min(2).max(60).default("India"),
   businessModel: z
     .enum(["Auto-detect", "Marketplace", "B2B SaaS", "B2C App", "AI Tool / API", "Hardware / Climate"])
     .default("Auto-detect"),

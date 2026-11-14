@@ -68,7 +68,7 @@ const copilotCache = new MemoryCache<string>();
 export function hashAnalysisInput(input: AnalysisInput): string {
   const normalized = [
     input.idea.trim().toLowerCase(),
-    (input.region || "Global").trim().toLowerCase(),
+    (input.region || "India").trim().toLowerCase(),
     (input.businessModel || "Auto-detect").trim().toLowerCase(),
     input.enableDeepScrape ? "1" : "0",
   ].join("|");
