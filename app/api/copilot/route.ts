@@ -1,3 +1,4 @@
+import { getCachedCopilot, setCachedCopilot } from "@/lib/cache";
 import { generateChatReply } from "@/lib/llm";
 import { consumeCopilotQuota, extractUserKey } from "@/lib/rate-limit";
 import { tinySearch } from "@/lib/tinyfish";
@@ -35,6 +36,20 @@ export async function POST(req: Request) {
   }
 
   const { question, useLiveWeb, report, history } = parsed.data;
+
+  // Fast-path: deliver cached reply for non-web repeat queries without conversational history
+  if (!useLiveWeb && (!history || history.length === 0)) {
+    const cachedAnswer = getCachedCopilot(report.id, question);
+    if (cachedAnswer) {
+      return Response.json({
+        answer: cachedAnswer,
+        provider: "cache",
+        sources: [],
+        quota: quotaRes.quota,
+        cached: true,
+      });
+    }
+  }
 
   let webSnippetBlock = "";
   let liveSources: Array<{ title: string; url: string; domain: string }> = [];
@@ -105,6 +120,10 @@ ${historyText || "(none)"}
 FOUNDER QUESTION:
 ${question}`,
     });
+
+    if (!useLiveWeb && (!history || history.length === 0)) {
+      setCachedCopilot(report.id, question, reply.text);
+    }
 
     return Response.json({
       answer: reply.text,

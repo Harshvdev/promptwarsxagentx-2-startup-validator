@@ -1,19 +1,32 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { CheckCircle2 } from "lucide-react";
-import {
-  AgentMissionControl,
-  type AgentNodeState,
-} from "@/components/AgentMissionControl";
-import { CopilotDrawer } from "@/components/CopilotDrawer";
+import type { AgentNodeState } from "@/components/AgentMissionControl";
 import { LandingPage } from "@/components/LandingPage";
-import { HistoryDrawer } from "@/components/HistoryDrawer";
 import { Navbar } from "@/components/Navbar";
-import {
-  ReportWorkspace,
-  type PartialReportData,
-} from "@/components/ReportWorkspace";
+import type { PartialReportData } from "@/components/ReportWorkspace";
+
+const ReportWorkspace = dynamic(
+  () => import("@/components/ReportWorkspace").then((mod) => mod.ReportWorkspace),
+  { ssr: false }
+);
+
+const AgentMissionControl = dynamic(
+  () => import("@/components/AgentMissionControl").then((mod) => mod.AgentMissionControl),
+  { ssr: false }
+);
+
+const HistoryDrawer = dynamic(
+  () => import("@/components/HistoryDrawer").then((mod) => mod.HistoryDrawer),
+  { ssr: false }
+);
+
+const CopilotDrawer = dynamic(
+  () => import("@/components/CopilotDrawer").then((mod) => mod.CopilotDrawer),
+  { ssr: false }
+);
 import type {
   AgentNodeId,
   AgentSSEEvent,

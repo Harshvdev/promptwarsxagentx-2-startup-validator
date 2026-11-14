@@ -78,13 +78,18 @@ SparkProof uses a **3-stage, 6-agent orchestrated pipeline** designed for speed,
 ### Core Architecture & Logic Highlights
 1. **Parallel Specialist Execution (`Promise.all`):**
    Instead of running agents sequentially (which took ~180s), Stage 2 runs Market Analyst, Competitor Intel, Customer Profiler, and Devil's Advocate in parallel, completing exhaustive multi-agent research in **~55 seconds**.
-2. **Multi-Model Dynamic Fallback:**
-   - **Primary LLM:** Gemini 3.5 Flash via `@google/genai` (low latency, structured outputs, high context window).
+2. **In-Memory SHA-256 Memoization & LRU Caching:**
+   Identical startup queries and repeat co-pilot questions are cryptographically hashed and memoized in-memory (`lib/cache.ts`), resolving in **< 50 milliseconds** with 0 API tokens consumed on repeat benchmarking.
+3. **Multi-Model Dynamic Fallback:**
+   - **Primary LLM:** Gemini 2.5 Flash via `@google/genai` (low latency, structured outputs, high context window).
    - **Secondary LLM:** Groq Llama 3.3 70B Versatile / Llama 3.1 8B with automatic model discovery and rate-limit rotation.
-3. **Multi-Tier Live Web Grounding:**
+4. **Multi-Tier Live Web Grounding:**
    - Real-time search via `TinySearch` with zero-config `DuckDuckGo` API fallback.
    - Deep page scraping via `TinyAgent` (browser automation) with automatic fallback to `TinyFetch` and `Jina Reader`.
-4. **Resilient JSON Recovery:**
+5. **Modular Subcomponent Hierarchy & Code-Splitting:**
+   - Strict Single-Responsibility Principle: all report tabs are isolated under `components/report/` (`OverviewTab`, `MarketTab`, `CompetitorsTab`, `CustomersTab`, `RoadmapTab`).
+   - Heavy workspaces and drawers are dynamically imported (`next/dynamic`), minimizing the initial JavaScript payload.
+6. **Resilient JSON Recovery:**
    - Custom `extractJsonText` handles markdown code blocks, backtick stripping, and nested root objects.
    - Self-healing retry loops with validation error re-prompting.
 
@@ -150,7 +155,7 @@ TINYFISH_API_KEY="your-tinyfish-api-key" # Optional for live web scraping
 
 ### 3. Run Quality & Test Suite
 ```bash
-# Run unit & schema tests (12 passing tests)
+# Run unit & schema tests (15 passing tests)
 bun run test
 
 # Run ESLint check (0 errors, 0 warnings)

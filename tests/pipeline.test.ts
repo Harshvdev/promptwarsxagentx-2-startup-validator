@@ -18,6 +18,16 @@ import {
 } from "../lib/rate-limit";
 import { DEMO_PRESETS } from "../lib/presets";
 import { reportToMarkdown } from "../lib/export";
+import {
+  clearAllCaches,
+  getCachedAnalysis,
+  getCachedCopilot,
+  getCacheStats,
+  hashAnalysisInput,
+  hashCopilotQuestion,
+  setCachedAnalysis,
+  setCachedCopilot,
+} from "../lib/cache";
 
 describe("PS08 Startup Co-Pilot: Input & Schema Validation", () => {
   test("accepts a comprehensive valid startup idea input", () => {
@@ -178,5 +188,61 @@ describe("PS08 Startup Co-Pilot: Output Schema Integrity & Report Export", () =>
     expect(md).toContain(`## 4. Customer Profiles & Discovery`);
     expect(md).toContain(`## 5. 90-Day Execution Plan`);
     expect(md).toContain(`Viability Score:`);
+  });
+});
+
+describe("PS08 Startup Co-Pilot: Performance & In-Memory Memoization", () => {
+  test("generates deterministic SHA-256 keys for identical inputs regardless of case or whitespace", () => {
+    const inputA = {
+      idea: "  Decentralized Compute Network for AI Training  ",
+      region: "Global",
+      businessModel: "AI Tool / API" as const,
+      enableDeepScrape: true,
+    };
+    const inputB = {
+      idea: "decentralized compute network for ai training",
+      region: "global",
+      businessModel: "AI Tool / API" as const,
+      enableDeepScrape: true,
+    };
+
+    const hashA = hashAnalysisInput(inputA);
+    const hashB = hashAnalysisInput(inputB);
+
+    expect(hashA).toBe(hashB);
+    expect(hashA).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  test("caches and retrieves analysis reports seamlessly", () => {
+    clearAllCaches();
+    const sample = DEMO_PRESETS[0];
+    const key = hashAnalysisInput(sample.input);
+
+    expect(getCachedAnalysis(key)).toBeNull();
+
+    setCachedAnalysis(key, sample);
+    const cached = getCachedAnalysis(key);
+    expect(cached).not.toBeNull();
+    expect(cached?.framer.startupTitle).toBe(sample.framer.startupTitle);
+  });
+
+  test("caches copilot answers and tracks performance stats", () => {
+    clearAllCaches();
+    const reportId = "rep_test_123";
+    const question = "How do I acquire the first 100 users?";
+    const answer = "Launch on Product Hunt and cold DM LinkedIn creators.";
+
+    const qHash = hashCopilotQuestion(reportId, question);
+    expect(qHash).toMatch(/^[a-f0-9]{64}$/);
+
+    expect(getCachedCopilot(reportId, question)).toBeNull();
+
+    setCachedCopilot(reportId, question, answer);
+    const cached = getCachedCopilot(reportId, question);
+    expect(cached).toBe(answer);
+
+    const stats = getCacheStats();
+    expect(stats.copilot.hits).toBe(1);
+    expect(stats.copilot.size).toBe(1);
   });
 });

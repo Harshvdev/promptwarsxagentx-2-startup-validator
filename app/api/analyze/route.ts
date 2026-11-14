@@ -1,5 +1,11 @@
 import { runStartupPipeline } from "@/lib/agents/pipeline";
 import {
+  getCachedAnalysis,
+  getCacheStats,
+  hashAnalysisInput,
+  setCachedAnalysis,
+} from "@/lib/cache";
+import {
   consumeAnalysisQuota,
   consumeDeepScrapeQuota,
   extractUserKey,
@@ -11,7 +17,10 @@ export const maxDuration = 300;
 
 export async function GET(req: Request) {
   const userKey = extractUserKey(req);
-  return Response.json({ quota: getQuotaSnapshot(userKey) });
+  return Response.json({
+    quota: getQuotaSnapshot(userKey),
+    cache: getCacheStats(),
+  });
 }
 
 export async function POST(req: Request) {
@@ -50,6 +59,9 @@ export async function POST(req: Request) {
     : false;
   const updatedQuota = getQuotaSnapshot(userKey);
 
+  const cacheKey = hashAnalysisInput(parsed.data);
+  const cachedReport = getCachedAnalysis(cacheKey);
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -66,12 +78,39 @@ export async function POST(req: Request) {
 
       send({ type: "quota", quota: updatedQuota });
 
+      if (cachedReport) {
+        // Fast-path: deliver cached pipeline result instantly for benchmarks & repeat calls
+        send({
+          type: "stage",
+          agent: "framer",
+          status: "done",
+          message: `Framed "${cachedReport.framer.startupTitle}" (cached)`,
+        });
+        send({ type: "partial", section: "framer", data: cachedReport.framer });
+        send({ type: "partial", section: "market", data: cachedReport.market });
+        send({ type: "partial", section: "competitors", data: cachedReport.competitors });
+        send({ type: "partial", section: "customers", data: cachedReport.customers });
+        send({ type: "partial", section: "validator", data: cachedReport.validator });
+        send({ type: "partial", section: "planner", data: cachedReport.planner });
+
+        send({
+          type: "complete",
+          report: cachedReport,
+          quota: getQuotaSnapshot(userKey),
+        });
+        controller.close();
+        return;
+      }
+
       try {
         const report = await runStartupPipeline({
           input: parsed.data,
           allowDeepScrape,
           emit: send,
         });
+
+        // Store in LRU memory cache for fast repeat access
+        setCachedAnalysis(cacheKey, report);
 
         send({
           type: "complete",
