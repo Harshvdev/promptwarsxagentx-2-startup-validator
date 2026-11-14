@@ -556,7 +556,7 @@ main.spark-main {
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: none;
     }
   }
 }
@@ -1471,6 +1471,59 @@ main.spark-main {
   margin-bottom: 8px;
 }
 
+.orch-timer-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orch-est-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--orange-50);
+  color: var(--orange-700);
+  border: 1px solid var(--orange-200);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .orch-est-badge {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.32);
+}
+
+.orch-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-hairline);
+  display: inline-block;
+}
+
+.orch-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.orch-timer-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
 .orch-track {
   height: 10px;
   background: var(--bg-subtle);
@@ -1743,6 +1796,11 @@ main.spark-main {
 /* ==========================================================================
    VIEW 3: STARTUP REPORT OUTPUT
    ========================================================================== */
+.report-workspace {
+  position: relative;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+}
+
 .preset-notice-banner {
   display: flex;
   align-items: center;
@@ -1968,6 +2026,34 @@ main.spark-main {
 .expand-all-btn:hover {
   color: var(--text-primary);
   border-color: var(--border-strong);
+}
+
+.nav-copilot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.nav-copilot-pill:hover {
+  background: var(--orange-50);
+  border-color: var(--orange-300);
+  color: var(--orange-700);
+}
+
+[data-theme="dark"] .nav-copilot-pill:hover {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.4);
+  color: #fb923c;
 }
 
 .section-grid-2 {
@@ -2791,26 +2877,42 @@ dialog.spark-drawer::backdrop {
 
 .floating-copilot-fab {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 45;
+  right: 28px;
+  bottom: 28px;
+  z-index: 90;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 12px 18px;
+  gap: 8px;
+  padding: 10px 18px;
   border-radius: 999px;
-  background: var(--text-primary);
-  color: var(--bg-canvas);
-  font-size: 0.85rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-hairline);
+  font-size: 0.84rem;
   font-weight: 700;
-  box-shadow: var(--shadow-lg);
-  transition: transform 0.2s var(--ease-out), background 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease, background 0.2s ease;
+}
+
+[data-theme="dark"] .floating-copilot-fab {
+  background: #18181b;
+  color: #f4f4f5;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
 .floating-copilot-fab:hover {
   transform: translateY(-2px);
   background: var(--orange-600);
-  color: #fff;
+  color: #ffffff !important;
+  border-color: var(--orange-600);
+  box-shadow: 0 6px 24px rgba(234, 88, 12, 0.35);
+}
+
+.floating-copilot-fab:hover svg {
+  color: #ffffff !important;
 }
 
 .toast {

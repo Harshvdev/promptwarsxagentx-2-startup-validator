@@ -161,19 +161,16 @@ export function AgentMissionControl({
           <span className="orch-stage-label">{stageLabel}</span>
           <div className="orch-timer-group">
             {isRunning && (
-              <span
-                className="tag-pill mono orch-est-badge"
-                style={{
-                  background: "var(--orange-50)",
-                  color: "var(--orange-700)",
-                  border: "1px solid var(--orange-200)",
-                  fontSize: "0.72rem",
-                }}
-              >
-                ~{estSecondsRemaining}s left
+              <span className="orch-est-badge">
+                <span className="orch-timer-label">ETA</span>
+                <span className="mono">~{estSecondsRemaining}s left</span>
               </span>
             )}
-            <span className="mono orch-time-val">{formattedTime}</span>
+            {isRunning && <span className="orch-divider" aria-hidden="true" />}
+            <span className="orch-time-badge">
+              <span className="orch-timer-label">Elapsed</span>
+              <span className="mono orch-time-val">{formattedTime}</span>
+            </span>
           </div>
         </div>
         <div className="orch-track">

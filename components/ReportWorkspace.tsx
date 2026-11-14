@@ -291,6 +291,20 @@ export function ReportWorkspace({
         >
           {showAllSections ? "Tabs" : "Show All"}
         </button>
+
+        <button
+          type="button"
+          className="nav-copilot-pill no-print"
+          onClick={onOpenCopilot}
+          title="Open Co-Pilot"
+        >
+          <MessageSquareText
+            className="h-3.5 w-3.5"
+            style={{ color: "var(--orange-500)" }}
+            aria-hidden="true"
+          />
+          <span>Co-Pilot</span>
+        </button>
       </div>
 
       {/* Modular Section Panels */}
